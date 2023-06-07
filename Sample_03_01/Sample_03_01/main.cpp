@@ -10,66 +10,114 @@ void InitRootSignature(RootSignature& rs);
 ///////////////////////////////////////////////////////////////////
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
-    //ゲームの初期化
-    InitGame(hInstance, hPrevInstance, lpCmdLine, nCmdShow, TEXT("Game"));
+	//ゲームの初期化
+	InitGame(hInstance, hPrevInstance, lpCmdLine, nCmdShow, TEXT("Game"));
 
-    //////////////////////////////////////
-    // ここから初期化を行うコードを記述する
-    //////////////////////////////////////
+	//////////////////////////////////////
+	// ここから初期化を行うコードを記述する
+	//////////////////////////////////////
 
-    //ルートシグネチャを作成
-    RootSignature rootSignature;
-    InitRootSignature(rootSignature);
+	//ルートシグネチャを作成
+	RootSignature rootSignature;
+	InitRootSignature(rootSignature);
 
-    //三角形ポリゴンを定義
-    TrianglePolygon triangle;
-    triangle.Init(rootSignature);
+	//三角形ポリゴンを定義
+	TrianglePolygon triangle;
+	triangle.Init(rootSignature);
 
-    // step-1 定数バッファを作成
+	// step-1 定数バッファを作成
+	ConstantBuffer cb;
+	cb.Init(sizeof(Matrix));
+	// step-2 ディスクリプタヒープを作成
+	DescriptorHeap ds;
+	ds.RegistConstantBuffer(0, cb);
+	ds.Commit();
+	//////////////////////////////////////
+	// 初期化を行うコードを書くのはここまで！！！
+	//////////////////////////////////////
+	auto& renderContext = g_graphicsEngine->GetRenderContext();
 
-    // step-2 ディスクリプタヒープを作成
+	float moveX = -1.0f;
+	float moveY = 0.0f;
+	float speedX = 0.125f;
+	float speedY = 0.125f;
 
-    //////////////////////////////////////
-    // 初期化を行うコードを書くのはここまで！！！
-    //////////////////////////////////////
-    auto& renderContext = g_graphicsEngine->GetRenderContext();
+	bool changeX = false;
+	bool changeY = false;
 
-    // ここからゲームループ
-    while (DispatchWindowMessage())
-    {
-        //フレーム開始
-        g_engine->BeginFrame();
+	// ここからゲームループ
+	while (DispatchWindowMessage())
+	{
+		//フレーム開始
+		g_engine->BeginFrame();
 
-        //////////////////////////////////////
-        //ここから絵を描くコードを記述する
-        //////////////////////////////////////
+		//////////////////////////////////////
+		//ここから絵を描くコードを記述する
+		//////////////////////////////////////
 
-        //ルートシグネチャを設定
-        renderContext.SetRootSignature(rootSignature);
+		//ルートシグネチャを設定
+		renderContext.SetRootSignature(rootSignature);
 
-        // step-3 ワールド行列を作成
+		// step-3 ワールド行列を作成
+		Matrix mWorld;
+		if (changeX)
+		{
+			moveX = moveX - speedX;
+			if (moveX < -1)
+			{
+				changeX = false;
+				speedX += 0.0001f;
+			}
+		}
+		else if (!changeX)
+		{
+			moveX = moveX + speedX;
+			if (moveX > 1)
+			{
+				changeX = true;
+				speedX += 0.0001f;
+			}
+		}
+		if (changeY)
+		{
+			moveY = moveY - speedY;
+			if (moveY < -1)
+			{
+				changeY = false;
+				speedY += 0.0001f;
+			}
+		}
+		else if (!changeY)
+		{
+			moveY = moveY + speedY;
+			if (moveY > 1)
+			{
+				changeY = true;
+				speedY += 0.0001f;
+			}
+		}
+		mWorld.MakeTranslation(moveX, moveY, 0.0f);
+		// step-4 ワールド行列をグラフィックメモリにコピー
+		cb.CopyToVRAM(mWorld);
+		// step-5 ディスクリプタヒープを設定
+		renderContext.SetDescriptorHeap(ds);
+		//三角形をドロー
+		triangle.Draw(renderContext);
 
-        // step-4 ワールド行列をグラフィックメモリにコピー
-
-        // step-5 ディスクリプタヒープを設定
-
-        //三角形をドロー
-        triangle.Draw(renderContext);
-
-        /// //////////////////////////////////////
-        //絵を描くコードを書くのはここまで！！！
-        //////////////////////////////////////
-        //フレーム終了
-        g_engine->EndFrame();
-    }
-    return 0;
+		/// //////////////////////////////////////
+		//絵を描くコードを書くのはここまで！！！
+		//////////////////////////////////////
+		//フレーム終了
+		g_engine->EndFrame();
+	}
+	return 0;
 }
 
 //ルートシグネチャの初期化
-void InitRootSignature( RootSignature& rs )
+void InitRootSignature(RootSignature& rs)
 {
-    rs.Init(D3D12_FILTER_MIN_MAG_MIP_LINEAR,
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP,
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP);
+	rs.Init(D3D12_FILTER_MIN_MAG_MIP_LINEAR,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		D3D12_TEXTURE_ADDRESS_MODE_WRAP);
 }
