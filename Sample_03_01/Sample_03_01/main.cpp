@@ -97,6 +97,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			}
 		}
 		mWorld.MakeTranslation(moveX, moveY, 0.0f);
+		//mWorld.MakeRotationZ(moveX);
 		// step-4 ワールド行列をグラフィックメモリにコピー
 		cb.CopyToVRAM(mWorld);
 		// step-5 ディスクリプタヒープを設定
