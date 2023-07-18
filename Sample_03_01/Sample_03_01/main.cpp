@@ -39,8 +39,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 	float moveX = -1.0f;
 	float moveY = 0.0f;
-	float speedX = 0.125f;
-	float speedY = 0.125f;
+	float speedX = 0.0125f;
+	float speedY = 0.0125f;
 
 	bool changeX = false;
 	bool changeY = false;
